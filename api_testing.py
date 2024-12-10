@@ -59,6 +59,37 @@ def test_add_manufacturer_success(mock_db):
     assert response.status_code == 201
     assert b"Manufacturer added successfully" in response.data
 
+def test_update_manufacturer_success(mock_db):
+    mock_db.rowcount = 1
+    client = app.test_client()
+    response = client.put('/manufacturers/1', json={
+        'manufacturer_ShortName': 'Updated Name',
+        'manufacturer_FullName': 'Updated Full Name',
+        'manufacturer_OtherDetails': 'Updated Details'
+    })
+    assert response.status_code == 200
+    assert b"Manufacturer updated successfully" in response.data
+
+def test_update_manufacturer_not_found(mock_db):
+    mock_db.rowcount = 0
+    client = app.test_client()
+    response = client.put('/manufacturers/999', json={})
+    assert response.status_code == 400
+    assert b"Missing required fields: manufacturer_ShortName and manufacturer_FullName" in response.data
+
+def test_delete_manufacturer_success(mock_db):
+    mock_db.rowcount = 1
+    client = app.test_client()
+    response = client.delete('/manufacturers/1')
+    assert response.status_code == 200
+    assert b"Manufacturer deleted successfully" in response.data
+
+def test_delete_manufacturer_not_found(mock_db):
+    mock_db.rowcount = 0
+    client = app.test_client()
+    response = client.delete('/manufacturers/999')
+    assert response.status_code == 404
+
 # Branches Table Tests
 def test_get_branches_empty(mock_db):
     mock_db.fetchall.return_value = []
@@ -123,10 +154,3 @@ def test_get_inventory(mock_db):
     
     assert response.status_code == 200
     assert b"New York" in response.data
-
-# Additional POST, PUT, DELETE for other routes (if required)
-# Test routes for adding data (branches, vehicles, inventory)
-# You can add similar tests for POST/PUT/DELETE as per your requirements.
-
-if __name__ == "__main__":
-    pytest.main()
