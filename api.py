@@ -126,7 +126,177 @@ def add_manufacturer():
     except Exception as e:
         return handle_error(f"An error occurred: {str(e)}", 500)
 
-# Example: More POST, PUT, DELETE routes for `branches`, `vehicles`, `inventory` as required.
+# PUT and DELETE methods for manufacturer
+@app.route("/manufacturers/<int:manufacturer_ID>", methods=["PUT"])
+def update_manufacturer(manufacturer_ID):
+    data = request.get_json()
+
+    if not data or not data.get("manufacturer_ShortName") or not data.get("manufacturer_FullName"):
+        return handle_error("Missing required fields: manufacturer_ShortName and manufacturer_FullName", 400)
+
+    manufacturer_ShortName = data["manufacturer_ShortName"]
+    manufacturer_FullName = data["manufacturer_FullName"]
+    manufacturer_OtherDetails = data.get("manufacturer_OtherDetails", None)
+
+    try:
+        cursor = mysql.connection.cursor()
+        query = """
+        UPDATE Car_Manufacturers
+        SET manufacturer_ShortName = %s, manufacturer_FullName = %s, manufacturer_OtherDetails = %s
+        WHERE manufacturer_ID = %s
+        """
+        cursor.execute(query, (manufacturer_ShortName, manufacturer_FullName, manufacturer_OtherDetails, manufacturer_ID))
+        mysql.connection.commit()
+
+        if cursor.rowcount == 0:
+            return handle_error(f"Manufacturer with ID {manufacturer_ID} not found", 404)
+
+        return jsonify({"message": "Manufacturer updated successfully"}), 200
+    except Exception as e:
+        return handle_error(f"An error occurred: {str(e)}", 500)
+
+@app.route("/manufacturers/<int:manufacturer_ID>", methods=["DELETE"])
+def delete_manufacturer(manufacturer_ID):
+    try:
+        cursor = mysql.connection.cursor()
+        query = "DELETE FROM Car_Manufacturers WHERE manufacturer_ID = %s"
+        cursor.execute(query, (manufacturer_ID,))
+        mysql.connection.commit()
+
+        if cursor.rowcount == 0:
+            return handle_error(f"Manufacturer with ID {manufacturer_ID} not found", 404)
+
+        return jsonify({"message": "Manufacturer deleted successfully"}), 200
+    except Exception as e:
+        return handle_error(f"An error occurred: {str(e)}", 500)
+
+# PUT and DELETE methods for branch
+@app.route("/branches/<string:branch_location>", methods=["PUT"])
+def update_branch(branch_location):
+    data = request.get_json()
+
+    if not data or not data.get("branch_Manager_Code"):
+        return handle_error("Missing required fields: branch_Manager_Code", 400)
+
+    branch_Manager_Code = data["branch_Manager_Code"]
+    branch_other_details = data.get("branch_other_details", None)
+
+    try:
+        cursor = mysql.connection.cursor()
+        query = """
+        UPDATE Branches
+        SET branch_other_details = %s, branch_Manager_Code = %s
+        WHERE branch_location = %s
+        """
+        cursor.execute(query, (branch_other_details, branch_Manager_Code, branch_location))
+        mysql.connection.commit()
+
+        if cursor.rowcount == 0:
+            return handle_error(f"Branch with location {branch_location} not found", 404)
+
+        return jsonify({"message": "Branch updated successfully"}), 200
+    except Exception as e:
+        return handle_error(f"An error occurred: {str(e)}", 500)
+
+@app.route("/branches/<string:branch_location>", methods=["DELETE"])
+def delete_branch(branch_location):
+    try:
+        cursor = mysql.connection.cursor()
+        query = "DELETE FROM Branches WHERE branch_location = %s"
+        cursor.execute(query, (branch_location,))
+        mysql.connection.commit()
+
+        if cursor.rowcount == 0:
+            return handle_error(f"Branch with location {branch_location} not found", 404)
+
+        return jsonify({"message": "Branch deleted successfully"}), 200
+    except Exception as e:
+        return handle_error(f"An error occurred: {str(e)}", 500)
+
+# PUT and DELETE methods for vehicle
+@app.route("/vehicles/<int:vehicle_ID>", methods=["PUT"])
+def update_vehicle(vehicle_ID):
+    data = request.get_json()
+
+    if not data or not data.get("vehicle_Description"):
+        return handle_error("Missing required fields: vehicle_Description", 400)
+
+    vehicle_Description = data["vehicle_Description"]
+    vehicle_OtherDetails = data.get("vehicle_OtherDetails", None)
+
+    try:
+        cursor = mysql.connection.cursor()
+        query = """
+        UPDATE Vehicles
+        SET vehicle_Description = %s, vehicle_OtherDetails = %s
+        WHERE vehicle_ID = %s
+        """
+        cursor.execute(query, (vehicle_Description, vehicle_OtherDetails, vehicle_ID))
+        mysql.connection.commit()
+
+        if cursor.rowcount == 0:
+            return handle_error(f"Vehicle with ID {vehicle_ID} not found", 404)
+
+        return jsonify({"message": "Vehicle updated successfully"}), 200
+    except Exception as e:
+        return handle_error(f"An error occurred: {str(e)}", 500)
+
+@app.route("/vehicles/<int:vehicle_ID>", methods=["DELETE"])
+def delete_vehicle(vehicle_ID):
+    try:
+        cursor = mysql.connection.cursor()
+        query = "DELETE FROM Vehicles WHERE vehicle_ID = %s"
+        cursor.execute(query, (vehicle_ID,))
+        mysql.connection.commit()
+
+        if cursor.rowcount == 0:
+            return handle_error(f"Vehicle with ID {vehicle_ID} not found", 404)
+
+        return jsonify({"message": "Vehicle deleted successfully"}), 200
+    except Exception as e:
+        return handle_error(f"An error occurred: {str(e)}", 500)
+
+# PUT and DELETE methods for inventory
+@app.route("/inventory/<int:inventory_ID>", methods=["PUT"])
+def update_inventory(inventory_ID):
+    data = request.get_json()
+
+    if not data or not data.get("inventory_Count"):
+        return handle_error("Missing required fields: inventory_Count", 400)
+
+    inventory_Count = data["inventory_Count"]
+
+    try:
+        cursor = mysql.connection.cursor()
+        query = """
+        UPDATE Inventory
+        SET inventory_Count = %s
+        WHERE inventory_ID = %s
+        """
+        cursor.execute(query, (inventory_Count, inventory_ID))
+        mysql.connection.commit()
+
+        if cursor.rowcount == 0:
+            return handle_error(f"Inventory with ID {inventory_ID} not found", 404)
+
+        return jsonify({"message": "Inventory updated successfully"}), 200
+    except Exception as e:
+        return handle_error(f"An error occurred: {str(e)}", 500)
+
+@app.route("/inventory/<int:inventory_ID>", methods=["DELETE"])
+def delete_inventory(inventory_ID):
+    try:
+        cursor = mysql.connection.cursor()
+        query = "DELETE FROM Inventory WHERE inventory_ID = %s"
+        cursor.execute(query, (inventory_ID,))
+        mysql.connection.commit()
+
+        if cursor.rowcount == 0:
+            return handle_error(f"Inventory with ID {inventory_ID} not found", 404)
+
+        return jsonify({"message": "Inventory deleted successfully"}), 200
+    except Exception as e:
+        return handle_error(f"An error occurred: {str(e)}", 500)
 
 if __name__ == '__main__':
     app.run(debug=True)
