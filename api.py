@@ -117,7 +117,84 @@ def handle_error(error_msg, status_code):
 
 @app.route("/")
 def hello_world():
-    return "Welcome to the Car Dealership Database API"
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Car Dealership API</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background: linear-gradient(to right, #4e54c8, #8f94fb);
+                color: #fff;
+                text-align: center;
+            }
+            header {
+                padding: 20px;
+                background: #4e54c8;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            header h1 {
+                margin: 0;
+                font-size: 2.5rem;
+            }
+            main {
+                padding: 20px;
+            }
+            main h2 {
+                margin: 20px 0;
+            }
+            nav ul {
+                list-style: none;
+                padding: 0;
+            }
+            nav ul li {
+                margin: 10px 0;
+            }
+            nav ul li a {
+                color: #fff;
+                text-decoration: none;
+                font-weight: bold;
+                border: 2px solid #fff;
+                padding: 10px 20px;
+                border-radius: 5px;
+                transition: background 0.3s;
+            }
+            nav ul li a:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Welcome to the Car Dealership Database API</h1>
+        </header>
+        <main>
+            <h2>Available Endpoints</h2>
+            <nav>
+                <ul>
+                    <li><a href="/manufacturers">Manufacturers</a></li>
+                    <br>
+                    <br>
+                    <li><a href="/branches">Branches</a></li>
+                     <br>
+                    <br>
+                    <li><a href="/vehicles">Vehicles</a></li>
+                     <br>
+                    <br>
+                    <li><a href="/inventory">Inventory</a></li>
+                </ul>
+            </nav>
+            <p>Explore the available data and interact with the API.</p>
+        </main>
+    </body>
+    </html>
+    """
+
 
 
 # Routes for retrieving data
