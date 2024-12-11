@@ -1,6 +1,10 @@
 import os
 from flask import Flask, request, jsonify, abort
 from flask_mysqldb import MySQL
+import bcrypt
+import jwt
+import datetime
+import json
 
 app = Flask(__name__)
 
@@ -9,8 +13,103 @@ app.config["MYSQL_HOST"] = "localhost"
 app.config["MYSQL_USER"] = "root"
 app.config["MYSQL_PASSWORD"] = "root"
 app.config["MYSQL_DB"] = "car_dealership"
+app.config["SECRET_KEY"] = "your_secret_key"
 
 mysql = MySQL(app)
+
+# Error handler
+def handle_error(error_msg, status_code):
+    return jsonify({"error": error_msg}), status_code
+
+# Token validation
+def validate_token():
+    token = request.headers.get("x-access-token")
+
+    if not token:
+        return None, handle_error("Token is missing!", 401)
+
+    try:
+        data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+        current_user = {"user_id": data["user_id"], "role": data["role"]}
+        return current_user, None
+    except Exception:
+        return None, handle_error("Token is invalid!", 401)
+
+# Role validation
+def validate_role(current_user, valid_roles):
+    if isinstance(valid_roles, str):
+        valid_roles = [valid_roles]
+    
+    if current_user["role"] not in valid_roles:
+        return jsonify({"error": "Unauthorized access"}), 403
+    return None
+
+# users.json
+users_data = {
+    "users": []
+}
+
+def save_to_json():
+    with open("users.json", "w") as f:
+        json.dump(users_data, f)
+
+def load_from_json():
+    global users_data
+    try:
+        with open("users.json", "r") as f:
+            users_data = json.load(f)
+    except FileNotFoundError:
+        save_to_json() 
+
+# User registration
+@app.route("/register", methods=["POST"])
+def register():
+    data = request.get_json()
+    if not data or not data.get("username") or not data.get("password") or not data.get("role"):
+        return handle_error("Missing required fields: username, password, and role are mandatory", 400)
+
+    username = data["username"]
+    password = bcrypt.hashpw(data["password"].encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    role = data["role"]
+
+    load_from_json()
+
+    for user in users_data["users"]:
+        if user["username"] == username:
+            return handle_error("Username already exists", 400)
+
+    new_user = {"username": username, "password": password, "role": role}
+    users_data["users"].append(new_user)
+    save_to_json()
+
+    return jsonify({"message": "User registered successfully"}), 201
+
+# User login
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    if not data or not data.get("username") or not data.get("password"):
+        return handle_error("Missing required fields: username and password are mandatory", 400)
+
+    username = data["username"]
+    password = data["password"]
+
+    load_from_json()
+
+    for user in users_data["users"]:
+        if user["username"] == username and bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8")):
+            token = jwt.encode(
+                {
+                    "user_id": username,
+                    "role": user["role"],
+                    "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1),
+                },
+                app.config["SECRET_KEY"],
+                algorithm="HS256",
+            )
+            return jsonify({"token": token}), 200
+
+    return handle_error("Invalid credentials", 401)
 
 # Error handler
 def handle_error(error_msg, status_code):
@@ -63,6 +162,12 @@ def get_branches():
 
 @app.route("/vehicles")
 def get_vehicles():
+
+    current_user, error = validate_token()
+    if error:
+        return error
+
+
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM Vehicles")
     vehicles = cursor.fetchall()
@@ -104,6 +209,15 @@ def get_inventory():
 # Routes for adding data
 @app.route("/manufacturers", methods=["POST"])
 def add_manufacturer():
+
+    current_user, error = validate_token()
+    if error:
+        return error
+
+
+
+
+
     data = request.get_json()
 
     if not data or not data.get("manufacturer_ShortName") or not data.get("manufacturer_FullName"):
@@ -259,6 +373,12 @@ def delete_vehicle(vehicle_ID):
 # PUT and DELETE methods for inventory
 @app.route("/inventory/<int:inventory_ID>", methods=["PUT"])
 def update_inventory(inventory_ID):
+
+    current_user, error = validate_token()
+    if error:
+        return error
+
+
     data = request.get_json()
 
     if not data or not data.get("inventory_Count"):
@@ -285,6 +405,12 @@ def update_inventory(inventory_ID):
 
 @app.route("/inventory/<int:inventory_ID>", methods=["DELETE"])
 def delete_inventory(inventory_ID):
+
+    current_user, error = validate_token()
+    if error:
+        return error
+
+
     try:
         cursor = mysql.connection.cursor()
         query = "DELETE FROM Inventory WHERE inventory_ID = %s"
