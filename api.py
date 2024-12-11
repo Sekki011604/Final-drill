@@ -239,11 +239,13 @@ def get_branches():
 
 @app.route("/vehicles")
 def get_vehicles():
-
     current_user, error = validate_token()
     if error:
         return error
 
+    role_error = validate_role(current_user, ["admin", "manager"])
+    if role_error:
+        return role_error
 
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM Vehicles")
@@ -290,6 +292,9 @@ def add_manufacturer():
     current_user, error = validate_token()
     if error:
         return error
+    role_error = validate_role(current_user, ["admin", "manager"])
+    if role_error:
+        return role_error
 
 
 
@@ -454,6 +459,10 @@ def update_inventory(inventory_ID):
     current_user, error = validate_token()
     if error:
         return error
+    
+    role_error = validate_role(current_user, ["admin", "manager"])
+    if role_error:
+        return role_error
 
 
     data = request.get_json()
@@ -486,6 +495,10 @@ def delete_inventory(inventory_ID):
     current_user, error = validate_token()
     if error:
         return error
+    
+    role_error = validate_role(current_user, ["admin", "manager"])
+    if role_error:
+        return role_error
 
 
     try:
